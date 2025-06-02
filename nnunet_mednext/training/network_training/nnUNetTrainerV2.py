@@ -36,6 +36,7 @@ from nnunet_mednext.training.learning_rate.poly_lr import poly_lr
 from batchgenerators.utilities.file_and_folder_operations import *
 
 import wandb
+from time import time
 
 class nnUNetTrainerV2(nnUNetTrainer):
     """
