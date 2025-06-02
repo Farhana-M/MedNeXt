@@ -35,8 +35,6 @@ from torch.cuda.amp import autocast
 from nnunet_mednext.training.learning_rate.poly_lr import poly_lr
 from batchgenerators.utilities.file_and_folder_operations import *
 
-import wandb
-from time import time
 
 class nnUNetTrainerV2(nnUNetTrainer):
     """
@@ -54,7 +52,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
 
         self.pin_memory = True
 
-        self.wandb_run = None
+        
         
 
 
@@ -419,25 +417,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
         super().on_epoch_end()
         continue_training = self.epoch < self.max_num_epochs
 
-        if self.wandb_run is not None and self.all_val_eval_metrics:
-            log_data = {
-                "epoch": self.epoch,
-                "train_loss": self.all_tr_losses[-1],
-                "val_loss": self.all_val_losses[-1],
-                "val_avg_dice": self.all_val_eval_metrics[-1],
-            }
-
-            if isinstance(self.all_val_eval_metrics[-1], (list, tuple)):
-                log_data.update({f"val_dice_class_{i+1}": d for i, d in enumerate(self.all_val_eval_metrics[-1])})
-
-            self.wandb_run.log(log_data, step=self.epoch)
-
-            if self.all_val_eval_metrics[-1] == max(self.all_val_eval_metrics):
-                self.best_epoch_table.add_data(
-                    self.epoch,
-                    self.all_val_eval_metrics[-1],
-                    *(self.all_val_eval_metrics[-1] if isinstance(self.all_val_eval_metrics[-1], (list, tuple)) else [None, None, None])
-            )
         # it can rarely happen that the momentum of nnUNetTrainerV2 is too high for some dataset. If at epoch 100 the
         # estimated validation Dice is still 0 then we reduce the momentum from 0.99 to 0.95
         if self.epoch == 100:
@@ -458,17 +437,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
         we also need to make sure deep supervision in the network is enabled for training, thus the wrapper
         :return:
         """
-        wandb.login(key="7cf8571ce9a18a2063097f4ec11428ed2ebd3cb7")
-        self.wandb_run = wandb.init(
-            project="MedNeXt_Dice_Epoch0-20",
-            name=f"MedNeXt_{int(time())}",
-            config={
-                "epochs": self.max_num_epochs,
-                "learning_rate": self.initial_lr,
-                "loss_function": str(self.loss),
-            }
-        )
-        self.best_epoch_table = wandb.Table(columns=["epoch", "val_avg_dice", "val_dice_class_1", "val_dice_class_2", "val_dice_class_3"])
 
         self.maybe_update_lr(self.epoch)  # if we dont overwrite epoch then self.epoch+1 is used which is not what we
         # want at the start of the training
@@ -476,9 +444,5 @@ class nnUNetTrainerV2(nnUNetTrainer):
         self.network.do_ds = True
         ret = super().run_training()
         self.network.do_ds = ds
-
-        if self.wandb_run is not None:
-            self.wandb_run.log({"best_epochs_table": self.best_epoch_table})
-            wandb.finish()
 
         return ret

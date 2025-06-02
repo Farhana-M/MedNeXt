@@ -141,6 +141,12 @@ class nnUNetTrainer(NetworkTrainer):
         self.conv_per_stage = None
         self.regions_class_order = None
 
+        self.last_val_dice_per_class = []
+        self.best_val_dice = -1
+        self.best_epoch = -1
+        self.best_metrics = {}
+
+
         wandb.login(key="7cf8571ce9a18a2063097f4ec11428ed2ebd3cb7")
         run = wandb.init(
             project="MedNeXt_Baseline_Dice_Epoch_test",
@@ -330,6 +336,20 @@ class nnUNetTrainer(NetworkTrainer):
         import shutil
 
         shutil.copy(self.plans_file, join(self.output_folder_base, "plans.pkl"))
+
+    def run_training(self):
+        self.save_debug_information()
+        super().run_training()  # This runs the full training loop
+
+        # Log best epoch metrics as a W&B Table
+        if self.best_metrics:
+            table = wandb.Table(columns=list(self.best_metrics.keys()))
+            table.add_data(*self.best_metrics.values())
+            wandb.log({"best_epoch_metrics": table})
+
+        # Ensure all logs are uploaded
+        wandb.finish()
+
 
     def run_training(self):
         self.save_debug_information()
@@ -743,6 +763,32 @@ class nnUNetTrainer(NetworkTrainer):
         self.online_eval_tp = []
         self.online_eval_fp = []
         self.online_eval_fn = []
+
+    def on_epoch_end(self):
+        super().on_epoch_end()  # Keep base nnUNet behavior
+
+        epoch = self.epoch
+        train_loss = self.all_tr_losses[-1] if self.all_tr_losses else None
+        val_loss = self.all_val_losses[-1] if self.all_val_losses else None
+        avg_dice = self.all_val_eval_metrics[-1] if self.all_val_eval_metrics else None
+
+        metrics = {
+            "epoch": epoch,
+            "train_loss": train_loss,
+            "val_loss": val_loss,
+            "avg_dice": avg_dice,
+        }
+
+        for i, dice in enumerate(self.last_val_dice_per_class):
+            metrics[f"dice_class_{i+1}"] = dice
+
+        wandb.log(metrics)
+
+        if avg_dice is not None and avg_dice > self.best_val_dice:
+            self.best_val_dice = avg_dice
+            self.best_epoch = epoch
+            self.best_metrics = metrics
+
 
     def save_checkpoint(self, fname, save_optimizer=True):
         super(nnUNetTrainer, self).save_checkpoint(fname, save_optimizer)
