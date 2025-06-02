@@ -55,7 +55,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
         self.pin_memory = True
 
         self.wandb_run = None
-        self.best_epoch_table = wandb.Table(columns=["epoch", "val_avg_dice", "val_dice_class_1", "val_dice_class_2", "val_dice_class_3"])
+        
 
 
     def initialize(self, training=True, force_load_plans=False):
@@ -468,7 +468,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
                 "loss_function": str(self.loss),
             }
         )
-        self.best_epoch_table = wandb.Table(columns=["epoch", "avg_dice"] + [f"class_{i}_dice" for i in range(self.num_classes)])
+        self.best_epoch_table = wandb.Table(columns=["epoch", "val_avg_dice", "val_dice_class_1", "val_dice_class_2", "val_dice_class_3"])
 
         self.maybe_update_lr(self.epoch)  # if we dont overwrite epoch then self.epoch+1 is used which is not what we
         # want at the start of the training
