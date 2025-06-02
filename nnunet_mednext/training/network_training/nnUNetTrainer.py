@@ -41,6 +41,15 @@ from nnunet_mednext.training.loss_functions.dice_loss import DC_and_CE_loss
 from nnunet_mednext.training.network_training.network_trainer import NetworkTrainer
 from nnunet_mednext.utilities.nd_softmax import softmax_helper
 from nnunet_mednext.utilities.tensor_utilities import sum_tensor
+from time import time
+
+try:
+    import wandb
+except ImportError:
+    import subprocess
+    import sys
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "wandb"])
+    import wandb
 
 matplotlib.use("agg")
 
@@ -131,6 +140,15 @@ class nnUNetTrainer(NetworkTrainer):
 
         self.conv_per_stage = None
         self.regions_class_order = None
+
+        wandb.login(key="7cf8571ce9a18a2063097f4ec11428ed2ebd3cb7")
+        run = wandb.init(
+            project="MedNeXt_Baseline_Dice_Epoch_test",
+            name = f"MedNeXt_{int(time())}",
+            config={                      
+                "learning_rate": self.initial_lr
+            },
+        )
 
     def update_fold(self, fold):
         """
@@ -719,7 +737,8 @@ class nnUNetTrainer(NetworkTrainer):
         self.print_to_log_file("Average global foreground Dice:", [np.round(i, 4) for i in global_dc_per_class])
         self.print_to_log_file("(interpret this as an estimate for the Dice of the different classes. This is not "
                                "exact.)")
-
+        self.last_val_dice_per_class = global_dc_per_class 
+        
         self.online_eval_foreground_dc = []
         self.online_eval_tp = []
         self.online_eval_fp = []

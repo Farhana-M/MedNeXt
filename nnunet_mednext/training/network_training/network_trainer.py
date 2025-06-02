@@ -38,6 +38,8 @@ from datetime import datetime
 from tqdm import trange
 from nnunet_mednext.utilities.to_torch import maybe_to_torch, to_cuda
 
+import wandb
+
 
 class NetworkTrainer(object):
     def __init__(self, deterministic=True, fp16=False):
@@ -94,7 +96,7 @@ class NetworkTrainer(object):
         # too high the training will take forever
         self.train_loss_MA_alpha = 0.93  # alpha * old + (1-alpha) * new
         self.train_loss_MA_eps = 5e-4  # new MA must be at least this much better (smaller)
-        self.max_num_epochs = 1000
+        self.max_num_epochs = 1
         self.num_batches_per_epoch = 250
         self.num_val_batches_per_epoch = 50
         self.also_val_in_tr_mode = False
@@ -119,12 +121,14 @@ class NetworkTrainer(object):
             self.use_progress_bar = bool(int(os.environ['nnunet_use_progress_bar']))
 
         ################# Settings for saving checkpoints ##################################
-        self.save_every = 50
+        self.save_every = 1
         self.save_latest_only = True  # if false it will not store/overwrite _latest but separate files each
         # time an intermediate checkpoint is created
         self.save_intermediate_checkpoints = True  # whether or not to save checkpoint_latest
         self.save_best_checkpoint = True  # whether or not to save the best checkpoint according to self.best_val_eval_criterion_MA
         self.save_final_checkpoint = True  # whether or not to save the final checkpoint
+
+        self.wandb_run = None
 
     @abstractmethod
     def initialize(self, training=True):
@@ -412,6 +416,18 @@ class NetworkTrainer(object):
         pass
 
     def run_training(self):
+        wandb.login(key="7cf8571ce9a18a2063097f4ec11428ed2ebd3cb7")
+        self.wandb_run = wandb.init(
+            project="MedNeXt_Dice_Epoch0-20",
+            name=f"MedNeXt_{int(time())}",
+            config={
+                "epochs": self.max_num_epochs,
+                "learning_rate": self.initial_lr,
+                "loss_function": str(self.loss),
+            }
+        )
+        self.best_epoch_table = wandb.Table(columns=["epoch", "avg_dice"] + [f"class_{i}_dice" for i in range(self.num_classes)])
+
         if not torch.cuda.is_available():
             self.print_to_log_file("WARNING!!! You are attempting to run training on a CPU (torch.cuda.is_available() is False). This can be VERY slow!")
 
@@ -460,6 +476,7 @@ class NetworkTrainer(object):
             # if self.all_tr_losses[-1] == np.nan:
             #     exit(1) # training losses became nan. Exiting.. continue training again with -c
             self.print_to_log_file("train loss : %.4f" % self.all_tr_losses[-1])
+            #self.wandb_run.log({"train_loss": self.all_tr_losses[-1]}, step=self.epoch)
 
             with torch.no_grad():
                 # validation with train=False
@@ -472,6 +489,24 @@ class NetworkTrainer(object):
                 # if self.all_val_losses[-1] == np.nan:   
                 #     exit(1) # validation losses became nan. Exiting.. continue training again with -c
                 self.print_to_log_file("validation loss: %.4f" % self.all_val_losses[-1])
+                #self.wandb_run.log({"val_loss": self.all_val_losses[-1]}, step=self.epoch)
+                if self.wandb_run is not None:
+                    self.wandb_run.log({
+                        "epoch": self.epoch,
+                        "train_loss": self.all_tr_losses[-1],
+                        "val_loss": self.all_val_losses[-1],
+                        "val_avg_dice": self.all_val_eval_metrics[-1],
+                        **{f"val_dice_class_{i}": d for i, d in enumerate(self.last_val_dice_per_class)}
+                    }, step=self.epoch)
+
+                    if self.all_val_eval_metrics[-1] == max(self.all_val_eval_metrics):
+                        self.best_epoch_table.add_data(
+                            self.epoch,
+                            self.all_val_eval_metrics[-1],
+                            *self.last_val_dice_per_class
+                         )
+
+
 
                 if self.also_val_in_tr_mode:
                     self.network.train()
@@ -497,6 +532,12 @@ class NetworkTrainer(object):
             self.print_to_log_file("This epoch took %f s\n" % (epoch_end_time - epoch_start_time))
 
         self.epoch -= 1  # if we don't do this we can get a problem with loading model_final_checkpoint.
+
+        # Log final best epoch summary table
+        if self.wandb_run is not None:
+            self.wandb_run.log({"best_epochs_table": self.best_epoch_table})
+            wandb.finish()
+
 
         if self.save_final_checkpoint: self.save_checkpoint(join(self.output_folder, "model_final_checkpoint.model"))
         # now we can delete latest as it will be identical with final
