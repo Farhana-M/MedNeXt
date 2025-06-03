@@ -156,9 +156,6 @@ class nnUNetTrainer(NetworkTrainer):
             },
         )
 
-        self.epoch_table = wandb.Table(columns=["epoch", "train_loss", "val_loss", "avg_dice"] +
-                                [f"dice_class_{i+1}" for i in range(self.num_classes - 1)])
-
 
     def update_fold(self, fold):
         """
@@ -345,11 +342,14 @@ class nnUNetTrainer(NetworkTrainer):
         self.save_debug_information()
         super().run_training()  # This runs the full training loop
 
+        if hasattr(self, "epoch_table"):
+            wandb.log({"epoch_metrics_table": self.epoch_table})
+
         # Log best epoch metrics as a W&B Table
-        if self.best_metrics:
-            table = wandb.Table(columns=list(self.best_metrics.keys()))
-            table.add_data(*self.best_metrics.values())
-            wandb.log({"best_epoch_metrics": table})
+        if hasattr(self, "best_metrics"):
+            best_table = wandb.Table(columns=list(self.best_metrics.keys()))
+            best_table.add_data(*self.best_metrics.values())
+            wandb.log({"best_epoch_metrics": best_table})
 
         # Ensure all logs are uploaded
         wandb.finish()
@@ -788,8 +788,14 @@ class nnUNetTrainer(NetworkTrainer):
 
         wandb.log(metrics)
 
-        row = [epoch, train_loss, val_loss, avg_dice] + self.last_val_dice_per_class 
+        if not hasattr(self, "epoch_table"):
+            self.epoch_table = wandb.Table(
+            columns=list(metrics.keys())
+        )
+
+        row = [metrics.get(col, None) for col in self.epoch_table.columns]
         self.epoch_table.add_data(*row)
+
 
         if avg_dice is not None and avg_dice > self.best_val_dice:
             self.best_val_dice = avg_dice
