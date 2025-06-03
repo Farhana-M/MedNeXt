@@ -355,9 +355,9 @@ class nnUNetTrainer(NetworkTrainer):
         wandb.finish()
 
 
-    def run_training(self):
-        self.save_debug_information()
-        super(nnUNetTrainer, self).run_training()
+    # def run_training(self):
+    #     self.save_debug_information()
+    #     super(nnUNetTrainer, self).run_training()
 
     def load_plans_file(self):
         """
