@@ -156,6 +156,10 @@ class nnUNetTrainer(NetworkTrainer):
             },
         )
 
+        self.epoch_table = wandb.Table(columns=["epoch", "train_loss", "val_loss", "avg_dice"] +
+                                [f"dice_class_{i+1}" for i in range(self.num_classes - 1)])
+
+
     def update_fold(self, fold):
         """
         used to swap between folds for inference (ensemble of models from cross-validation)
@@ -783,6 +787,9 @@ class nnUNetTrainer(NetworkTrainer):
             metrics[f"dice_class_{i+1}"] = dice
 
         wandb.log(metrics)
+
+        row = [epoch, train_loss, val_loss, avg_dice] + self.last_val_dice_per_class 
+        self.epoch_table.add_data(*row)
 
         if avg_dice is not None and avg_dice > self.best_val_dice:
             self.best_val_dice = avg_dice
