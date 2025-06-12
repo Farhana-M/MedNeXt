@@ -18,7 +18,8 @@ from typing import Tuple
 
 import numpy as np
 import torch
-from nnunet_mednext.training.data_augmentation.data_augmentation_moreDA import get_moreDA_augmentation
+from nnunet_mednext.training.data_augmentation.data_augmentation_insaneDA import get_insaneDA_augmentation
+#from nnunet_mednext.training.data_augmentation.data_augmentation_moreDA import get_moreDA_augmentation
 from nnunet_mednext.training.loss_functions.deep_supervision import MultipleOutputLoss2
 from nnunet_mednext.utilities.to_torch import maybe_to_torch, to_cuda
 from nnunet_mednext.network_architecture.generic_UNet import Generic_UNet
@@ -106,7 +107,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
                         "INFO: Not unpacking data! Training may be slow due to that. Pray you are not using 2d or you "
                         "will wait all winter for your model to finish!")
 
-                self.tr_gen, self.val_gen = get_moreDA_augmentation(
+                self.tr_gen, self.val_gen = get_insaneDA_augmentation(
                     self.dl_tr, self.dl_val,
                     self.data_aug_params[
                         'patch_size_for_spatialtransform'],
