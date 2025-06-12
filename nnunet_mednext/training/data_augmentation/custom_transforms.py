@@ -121,3 +121,51 @@ class ConvertSegmentationToRegionsTransform(AbstractTransform):
                         region_output[b, r][seg[b, self.seg_channel] == l] = 1
             data_dict[self.output_key] = region_output
         return data_dict
+
+class RandomBiasFieldTransform(AbstractTransform):
+    """
+    Simulate MRI bias field artifact as described by Leemput et al. (1999).
+    Adds a smooth multiplicative field to simulate intensity non-uniformity.
+
+    Args:
+        order (int): Order of the polynomial basis.
+        coeff_range (tuple): Range of random coefficients (min, max).
+        p_per_sample (float): Probability of applying the transform to a sample.
+    """
+    def __init__(self, order=3, coeff_range=(0.3, 0.8), p_per_sample=0.25):
+        self.order = self._validate_order(order)
+        self.coeff_range = coeff_range
+        self.p_per_sample = p_per_sample
+
+    def __call__(self, **data_dict):
+        if np.random.rand() >= self.p_per_sample:
+            return data_dict
+
+        image = data_dict['data']
+        shape = image.shape[1:]  # exclude channel dim (assume shape is (C, X, Y, Z))
+
+        bias_field = self.generate_bias_field(shape, self.order, self.coeff_range)
+        bias_field = np.exp(bias_field).astype(np.float32)
+
+        # Apply bias to all channels
+        data_dict['data'] *= bias_field[np.newaxis, ...]
+        return data_dict
+
+    def generate_bias_field(self, shape, order, coeff_range):
+        coords = [np.linspace(-1, 1, s, dtype=np.float32) for s in shape]
+        mesh = np.meshgrid(*coords, indexing='ij')
+        bias_field = np.zeros(shape, dtype=np.float32)
+
+        for xo in range(order + 1):
+            for yo in range(order + 1 - xo):
+                for zo in range(order + 1 - (xo + yo)):
+                    coeff = np.random.uniform(*coeff_range)
+                    term = coeff * (mesh[0] ** xo) * (mesh[1] ** yo) * (mesh[2] ** zo)
+                    bias_field += term
+
+        return bias_field
+
+    def _validate_order(self, order):
+        if not isinstance(order, int) or order < 0:
+            raise ValueError("Order must be a non-negative integer.")
+        return order

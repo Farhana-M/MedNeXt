@@ -37,7 +37,7 @@ try:
     from batchgenerators.dataloading.nondet_multi_threaded_augmenter import NonDetMultiThreadedAugmenter
 except ImportError as ie:
     NonDetMultiThreadedAugmenter = None
-
+from nnunet_mednext.training.data_augmentation.custom_transforms import RandomBiasFieldTransform
 
 def get_moreDA_augmentation(dataloader_train, dataloader_val, patch_size, params=default_3D_augmentation_params,
                             border_val_seg=-1,
@@ -84,6 +84,7 @@ def get_moreDA_augmentation(dataloader_train, dataloader_val, patch_size, params
     # we need to put the color augmentations after the dummy 2d part (if applicable). Otherwise the overloaded color
     # channel gets in the way
     tr_transforms.append(GaussianNoiseTransform(p_per_sample=0.1))
+    tr_transforms.append(RandomBiasFieldTransform(order=3, coeff_range=(0.3, 0.8), p_per_sample=0.25))
     tr_transforms.append(GaussianBlurTransform((0.5, 1.), different_sigma_per_channel=True, p_per_sample=0.2,
                                                p_per_channel=0.5))
     tr_transforms.append(BrightnessMultiplicativeTransform(multiplier_range=(0.75, 1.25), p_per_sample=0.15))
