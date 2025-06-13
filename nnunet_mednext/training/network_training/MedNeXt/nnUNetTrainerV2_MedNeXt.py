@@ -3,6 +3,7 @@ import os
 import torch.nn as nn
 from nnunet_mednext.network_architecture.mednextv1.MedNextV1 import MedNeXt as MedNeXt_Orig
 from nnunet_mednext.training.network_training.nnUNetTrainerV2 import nnUNetTrainerV2
+from nnunet_mednext.training.network_training.nnUNetTrainer import nnUNetTrainer
 from nnunet_mednext.network_architecture.neural_network import SegmentationNetwork
 from nnunet_mednext.utilities.nd_softmax import softmax_helper
 
