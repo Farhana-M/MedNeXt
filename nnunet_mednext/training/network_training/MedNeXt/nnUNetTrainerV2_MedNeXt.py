@@ -42,7 +42,7 @@ class nnUNetTrainerV2_Optim_and_LR(nnUNetTrainerV2):
         self.lr_scheduler = None
 
 #nnUNetTrainerV2_Optim_and_LR
-class nnUNetTrainerV2_MedNeXt_S_kernel3(nUNetTrainerV2_Optim_and_LR):   
+class nnUNetTrainerV2_MedNeXt_S_kernel3(nnUNetTrainerV2_Optim_and_LR):   
     
     def initialize_network(self):
         self.network = MedNeXt(
