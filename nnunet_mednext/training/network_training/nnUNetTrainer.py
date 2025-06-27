@@ -149,8 +149,8 @@ class nnUNetTrainer(NetworkTrainer):
 
         wandb.login(key="7cf8571ce9a18a2063097f4ec11428ed2ebd3cb7")
         run = wandb.init(
-            project="MedNeXt_InsaneSDA_AdamW_M_K3_Fold0",
-            name = f"Epoch_60_99",
+            project="MedNeXt_BK3_ADG_InsaneDA_Fold_All",
+            name = f"Epoch_0_49",
             config={                      
                 "learning_rate": self.initial_lr
             },
@@ -290,7 +290,7 @@ class nnUNetTrainer(NetworkTrainer):
 
     def initialize_optimizer_and_scheduler(self):
         assert self.network is not None, "self.initialize_network must be called first"
-        self.optimizer = torch.optim.Adam(self.network.parameters(), self.initial_lr, weight_decay=self.weight_decay,
+        self.optimizer = torch.optim.AdamW(self.network.parameters(), self.initial_lr, weight_decay=self.weight_decay,
                                           amsgrad=True)
         self.lr_scheduler = lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.2,
                                                            patience=self.lr_scheduler_patience,
