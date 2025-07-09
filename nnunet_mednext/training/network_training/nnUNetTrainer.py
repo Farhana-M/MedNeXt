@@ -116,7 +116,7 @@ class nnUNetTrainer(NetworkTrainer):
         self.basic_generator_patch_size = self.data_aug_params = self.transpose_forward = self.transpose_backward = None
 
         self.batch_dice = batch_dice
-        self.loss = GDL_and_CE_loss({'batch_dice': self.batch_dice, 'smooth': 1e-5, 'do_bg': False}, {})
+        self.loss = DC_and_CE_loss({'batch_dice': self.batch_dice, 'smooth': 1e-5, 'do_bg': False}, {})
 
         self.online_eval_foreground_dc = []
         self.online_eval_tp = []
@@ -150,8 +150,8 @@ class nnUNetTrainer(NetworkTrainer):
 
         wandb.login(key="7cf8571ce9a18a2063097f4ec11428ed2ebd3cb7")
         run = wandb.init(
-            project="MedNeXt_InsaneSDA_AdamW_M_K3_Fold0",
-            name = f"Epoch_100_139",
+            project="MedNeXt_InsaneDA_AdamW_M_K3_Fold1",
+            name = f"Epoch_0_29",
             config={                     
                 "learning_rate": self.initial_lr
             },
