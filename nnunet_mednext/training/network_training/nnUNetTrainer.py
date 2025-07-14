@@ -150,9 +150,9 @@ class nnUNetTrainer(NetworkTrainer):
 
         wandb.login(key="7cf8571ce9a18a2063097f4ec11428ed2ebd3cb7")
         run = wandb.init(
-            project="Mednext_ADG_InsaneDAFM_AdamW_S_K3_FoldALL",
-            #project="Mednext_InsaneDA_AdamW_BK3_Fold0_SSA",
-            name = f"Epoch_60_89",
+            #project="Mednext_ADG_InsaneDAFM_AdamW_S_K3_FoldALL",
+            project="Mednext_InsaneDA_AdamW_BK3_Fold0_SSA",
+            name = f"Epoch_86_120",
             config={                     
                 "learning_rate": self.initial_lr
             },

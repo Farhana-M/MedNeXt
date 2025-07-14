@@ -78,24 +78,24 @@ def get_insaneDA_augmentation(dataloader_train, dataloader_val, patch_size, para
 
     # we need to put the color augmentations after the dummy 2d part (if applicable). Otherwise the overloaded color
     # channel gets in the way
-    #tr_transforms.append(GaussianNoiseTransform(p_per_sample=0.15))
-    tr_transforms.append(GaussianNoiseTransform(p_per_sample=0.25))
-    #tr_transforms.append(GaussianBlurTransform((0.5, 1.5), different_sigma_per_channel=True, p_per_sample=0.2,
-    #                                           p_per_channel=0.5))
-    tr_transforms.append(GaussianBlurTransform((0.8, 2.0), different_sigma_per_channel=True, p_per_sample=0.25,
-                                               p_per_channel=0.5))
-    #tr_transforms.append(BrightnessMultiplicativeTransform(multiplier_range=(0.70, 1.3), p_per_sample=0.15))
-    tr_transforms.append(BrightnessMultiplicativeTransform(multiplier_range=(0.60, 1.4), p_per_sample=0.25))
-    #tr_transforms.append(ContrastAugmentationTransform(contrast_range=(0.65, 1.5), p_per_sample=0.15))
+    tr_transforms.append(GaussianNoiseTransform(p_per_sample=0.15))
+    #tr_transforms.append(GaussianNoiseTransform(p_per_sample=0.25))
+    tr_transforms.append(GaussianBlurTransform((0.5, 1.5), different_sigma_per_channel=True, p_per_sample=0.2,
+                                              p_per_channel=0.5))
+    # tr_transforms.append(GaussianBlurTransform((0.8, 2.0), different_sigma_per_channel=True, p_per_sample=0.25,
+    #                                            p_per_channel=0.5))
+    tr_transforms.append(BrightnessMultiplicativeTransform(multiplier_range=(0.70, 1.3), p_per_sample=0.15))
+    #tr_transforms.append(BrightnessMultiplicativeTransform(multiplier_range=(0.60, 1.4), p_per_sample=0.25))
+    tr_transforms.append(ContrastAugmentationTransform(contrast_range=(0.65, 1.5), p_per_sample=0.15))
     tr_transforms.append(ContrastAugmentationTransform(contrast_range=(0.4, 1.6), p_per_sample=0.25))
-    # tr_transforms.append(SimulateLowResolutionTransform(zoom_range=(0.5, 1), per_channel=True,
-    #                                                     p_per_channel=0.5,
-    #                                                     order_downsample=0, order_upsample=3, p_per_sample=0.25,
-    #                                                     ignore_axes=ignore_axes))
-    tr_transforms.append(SimulateLowResolutionTransform(zoom_range=(0.3, 0.75), per_channel=True,
+    tr_transforms.append(SimulateLowResolutionTransform(zoom_range=(0.5, 1), per_channel=True,
                                                         p_per_channel=0.5,
-                                                        order_downsample=0, order_upsample=3, p_per_sample=0.3,
+                                                        order_downsample=0, order_upsample=3, p_per_sample=0.25,
                                                         ignore_axes=ignore_axes))
+    # tr_transforms.append(SimulateLowResolutionTransform(zoom_range=(0.3, 0.75), per_channel=True,
+    #                                                     p_per_channel=0.5,
+    #                                                     order_downsample=0, order_upsample=3, p_per_sample=0.3,
+    #                                                     ignore_axes=ignore_axes))
     tr_transforms.append(
         GammaTransform(params.get("gamma_range"), True, True, retain_stats=params.get("gamma_retain_stats"),
                        p_per_sample=0.15))  # inverted gamma
