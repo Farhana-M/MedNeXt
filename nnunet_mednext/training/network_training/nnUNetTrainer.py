@@ -156,7 +156,7 @@ class nnUNetTrainer(NetworkTrainer):
             #project="Mednext_transfer_InsaneDAFM_AdamW_M_K3_FoldALL",
             #project="Mednext_ADG_InsaneDAFM_AdamW_S_K3_FoldALL",
             #project="Mednext_ADG_InsaneDAFM_AdamW_B_K3_FoldALL",
-            name = f"Epoch_0_29",
+            name = f"Epoch_30_65",
             config={                     
                 "learning_rate": self.initial_lr
             },
