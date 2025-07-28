@@ -152,11 +152,11 @@ class nnUNetTrainer(NetworkTrainer):
         run = wandb.init(
             #project="Mednext_ADG_InsaneDAFM_AdamW_S_K3_FoldALL",
             #project="Mednext_transfer_InsaneDAFM_AdamW_S_K3_FoldALL",
-            project="Mednext_InsaneDAFM_AdamW_BK3_Fold0_SSA",
+            #project="Mednext_InsaneDAFM_AdamW_BK3_Fold0_SSA",
             #project="Mednext_transfer_InsaneDAFM_AdamW_M_K3_FoldALL",
             #project="Mednext_ADG_InsaneDAFM_AdamW_S_K3_FoldALL",
-            #project="Mednext_ADG_InsaneDAFM_AdamW_B_K3_FoldALL",
-            name = f"Epoch_65_100",
+            project="Mednext_ADG_InsaneDAFM_AdamW_B_K3_FoldALL",
+            name = f"Epoch_0_20",
             config={                     
                 "learning_rate": self.initial_lr
             },
